@@ -6,12 +6,13 @@ const {
   getSingleTask,
   deleteTask,
 } = require("../controllers/tasks.controller");
-const protectRoute = require("../middleware/protectRoute");
+
+const authenticateToken = require("../middleware/protectRoute");
 const router = express.Router();
 
-// router.use(protectRoute);
+router.use(authenticateToken);
 router
-  .post("/create", protectRoute,createTask)
+  .post("/create",createTask)
   .get("/getall", getAllTask)
   .get("/singleTask/:id", getSingleTask)
   .put("/update/:id", updateTask)

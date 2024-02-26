@@ -1,33 +1,25 @@
-const User = require("../models/User.js");
-
 const jwt = require("jsonwebtoken");
 
-const protectRoute = async (req, res, next) => {
-  try {
-    const token = req.cookies.jwt;
+const authenticateToken = (req, res, next) => {
+  // Get the token from the cookie or authorization header
+  const token = req.cookies.jwt || req.headers.authorization;
 
-    // console.log(token)
-
-    if (!token) {
-      return res.status(401).json({ error: "Unauthorized no token provided" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded) {
-      return res.status(401).json({ error: "Unauthorized access" });
-    }
-    const user = await User.findById(decoded.userId).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ error: "user not found" });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error in Login" });
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized - No token provided" });
   }
+
+  // Verify the token
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: "Unauthorized - Invalid token" });
+    }
+
+    // Attach the user information to the request object
+    req.user = decoded;
+
+    // Continue to the next middleware or route handler
+    next();
+  });
 };
 
-module.exports = protectRoute;
+module.exports = authenticateToken;
